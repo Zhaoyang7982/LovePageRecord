@@ -1,14 +1,25 @@
 /**
- * 情侣双向爱意记录 — 纯前端 + LocalStorage
- * 请务必修改下方账号密码后再部署使用。
+ * 情侣双向爱意记录
+ * 登录状态：浏览器 LocalStorage
+ * 记录：填写下方 SUPABASE_URL + SUPABASE_ANON_KEY 后走云端，任意设备同一站点即可同步查看
+ * 不填则仅用本机 LocalStorage（换设备看不到）
+ *
+ * 建表：将 supabase/schema.sql 在 Supabase → SQL Editor 中执行一次
  */
 (function () {
   var STORAGE_SESSION = "loveRecord_session";
   var STORAGE_ENTRIES = "loveRecord_entries";
+  var EMPTY_TIP =
+    "Ta 还没有为你留下记录，把链接发给 Ta 吧～";
+
+  /** 例: https://xxxxxxxx.supabase.co */
+  var SUPABASE_URL = "https://bxxkukqfsttbieehwrsh.supabase.co";
+  /** Project Settings → API → anon public */
+  var SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ4eGt1a3Fmc3R0YmllZWh3cnNoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwOTg4OTksImV4cCI6MjA5MTY3NDg5OX0.CGNqVLrly7P52oHZZYf_psQtTa_J1rlhu9ljPQKHMiU";
 
   /** @type {{ female: {username:string,password:string}, male: {username:string,password:string} }} */
   var ACCOUNTS = {
-    female: { username: "yuyu", password: "0321" },
+    female: { username: "Yuyu", password: "0321" },
     male: { username: "qiqi", password: "1112" }
   };
 
@@ -20,6 +31,8 @@
   var currentRole = null;
   /** @type {any|null} */
   var selectedRecord = null;
+  /** @type {any[]} */
+  var entriesCache = [];
 
   function $(id) {
     return document.getElementById(id);
@@ -27,6 +40,74 @@
 
   function oppositeRole(role) {
     return role === "female" ? "male" : "female";
+  }
+
+  function useRemote() {
+    return !!(
+      SUPABASE_URL &&
+      SUPABASE_ANON_KEY &&
+      SUPABASE_URL.indexOf("https://") === 0
+    );
+  }
+
+  function sbHeaders() {
+    return {
+      apikey: SUPABASE_ANON_KEY,
+      Authorization: "Bearer " + SUPABASE_ANON_KEY,
+      "Content-Type": "application/json"
+    };
+  }
+
+  function rowToEntry(r) {
+    var imgs = r.images;
+    if (!Array.isArray(imgs)) imgs = [];
+    return {
+      id: r.id,
+      publisher: r.publisher,
+      receiver: r.receiver,
+      text: r.body != null ? String(r.body) : "",
+      images: imgs,
+      createdAt: r.created_at
+    };
+  }
+
+  function fetchEntriesFromRemote() {
+    var base = SUPABASE_URL.replace(/\/$/, "");
+    var url = base + "/rest/v1/love_entries?select=*&order=created_at.desc";
+    return fetch(url, { headers: sbHeaders() }).then(function (res) {
+      if (!res.ok) {
+        return res.text().then(function (t) {
+          throw new Error(t || "HTTP " + res.status);
+        });
+      }
+      return res.json();
+    }).then(function (rows) {
+      return rows.map(rowToEntry);
+    });
+  }
+
+  function insertEntryRemote(rec) {
+    var base = SUPABASE_URL.replace(/\/$/, "");
+    var url = base + "/rest/v1/love_entries";
+    var payload = {
+      id: rec.id,
+      publisher: rec.publisher,
+      receiver: rec.receiver,
+      body: rec.text,
+      images: rec.images,
+      created_at: rec.createdAt
+    };
+    return fetch(url, {
+      method: "POST",
+      headers: Object.assign({}, sbHeaders(), { Prefer: "return=minimal" }),
+      body: JSON.stringify(payload)
+    }).then(function (res) {
+      if (!res.ok) {
+        return res.text().then(function (t) {
+          throw new Error(t || "HTTP " + res.status);
+        });
+      }
+    });
   }
 
   function loadSession() {
@@ -49,7 +130,7 @@
     localStorage.removeItem(STORAGE_SESSION);
   }
 
-  function loadEntries() {
+  function loadEntriesLocal() {
     try {
       var raw = localStorage.getItem(STORAGE_ENTRIES);
       if (!raw) return [];
@@ -60,7 +141,7 @@
     }
   }
 
-  function saveEntries(entries) {
+  function saveEntriesLocal(entries) {
     try {
       localStorage.setItem(STORAGE_ENTRIES, JSON.stringify(entries));
       return true;
@@ -71,6 +152,53 @@
 
   function genId() {
     return "r_" + Date.now() + "_" + Math.random().toString(36).slice(2, 9);
+  }
+
+  function setSyncLoading(on) {
+    if (!useRemote() || !currentRole) return;
+    var empty = $("empty-tip");
+    var box = $("cards-container");
+    if (on) {
+      empty.textContent = "正在从云端加载记录…";
+      empty.classList.remove("hidden");
+      box.classList.add("hidden");
+    } else {
+      box.classList.remove("hidden");
+    }
+  }
+
+  function refreshEntries(done) {
+    if (!useRemote()) {
+      entriesCache = loadEntriesLocal();
+      if (typeof done === "function") done(null);
+      return;
+    }
+    fetchEntriesFromRemote()
+      .then(function (rows) {
+        entriesCache = rows;
+        if (typeof done === "function") done(null);
+      })
+      .catch(function (e) {
+        if (typeof done === "function") done(e);
+      });
+  }
+
+  function updateSyncBanner() {
+    var b = $("sync-banner");
+    if (!b) return;
+    if (!currentRole) {
+      b.classList.add("hidden");
+      b.textContent = "";
+      return;
+    }
+    if (useRemote()) {
+      b.classList.add("hidden");
+      b.textContent = "";
+    } else {
+      b.textContent =
+        "当前为仅本机存储，换设备看不到记录。在 js/main.js 填写 Supabase 的 URL 与 anon key 即可多端同步（见 supabase/schema.sql）。";
+      b.classList.remove("hidden");
+    }
   }
 
   /**
@@ -185,7 +313,7 @@
   }
 
   function getVisibleEntries(role) {
-    return loadEntries().filter(function (e) {
+    return entriesCache.filter(function (e) {
       return e && e.receiver === role;
     });
   }
@@ -201,6 +329,7 @@
     var empty = $("empty-tip");
     var box = $("cards-container");
     box.innerHTML = "";
+    empty.textContent = EMPTY_TIP;
     empty.classList.toggle("hidden", entries.length > 0);
     entries.sort(function (a, b) {
       return new Date(b.createdAt) - new Date(a.createdAt);
@@ -235,11 +364,6 @@
         textEl.className = "love-card__text";
         textEl.textContent = rec.text || "（无文字）";
         body.appendChild(textEl);
-      } else {
-        var hint = document.createElement("p");
-        hint.className = "love-card__hint";
-        hint.textContent = "点击查看全文";
-        body.appendChild(hint);
       }
       if (rec.images && rec.images.length > 1) {
         var more = document.createElement("div");
@@ -280,6 +404,7 @@
     $("publish-text").value = "";
     $("publish-files").value = "";
     $("publish-preview").innerHTML = "";
+    $("publish-preview").removeAttribute("data-urls");
     $("publish-overlay").classList.remove("hidden");
   }
 
@@ -297,6 +422,22 @@
     });
   }
 
+  function enterApp(showWelcome) {
+    $("role-badge").textContent = "当前身份：" + ROLE_LABEL[currentRole];
+    setScreens(true);
+    updateSyncBanner();
+    setSyncLoading(true);
+    refreshEntries(function (err) {
+      setSyncLoading(false);
+      if (err) {
+        showToast("云端同步失败：" + (err.message || "请检查网络与 Supabase 配置"), true);
+      }
+      renderCards();
+      updateSyncBanner();
+    });
+    if (showWelcome) showToast("欢迎回来～");
+  }
+
   function init() {
     $("login-form").addEventListener("submit", function (ev) {
       ev.preventDefault();
@@ -309,18 +450,17 @@
       }
       currentRole = role;
       saveSession(role);
-      $("role-badge").textContent = "当前身份：" + ROLE_LABEL[role];
-      setScreens(true);
-      renderCards();
-      showToast("欢迎回来～");
+      enterApp(true);
     });
 
     $("btn-logout").addEventListener("click", function () {
       currentRole = null;
+      entriesCache = [];
       clearSession();
       setScreens(false);
       $("login-user").value = "";
       $("login-pass").value = "";
+      updateSyncBanner();
     });
 
     $("btn-open-publish").addEventListener("click", openPublish);
@@ -357,15 +497,32 @@
         images: urls || [],
         createdAt: new Date().toISOString()
       };
-      var all = loadEntries();
-      all.push(rec);
-      if (!saveEntries(all)) {
-        showToast("存储空间不足，请减少图片数量或删除旧记录", true);
-        return;
+      if (useRemote()) {
+        insertEntryRemote(rec)
+          .then(function () {
+            return fetchEntriesFromRemote();
+          })
+          .then(function (rows) {
+            entriesCache = rows;
+            closePublish();
+            renderCards();
+            showToast("已发布，对方任意设备登录即可看到");
+          })
+          .catch(function (e) {
+            showToast("发布失败：" + (e.message || "未知错误"), true);
+          });
+      } else {
+        var all = loadEntriesLocal();
+        all.push(rec);
+        if (!saveEntriesLocal(all)) {
+          showToast("存储空间不足，请减少图片数量或删除旧记录", true);
+          return;
+        }
+        entriesCache = all;
+        closePublish();
+        renderCards();
+        showToast("已发布，对方登录后即可看到");
       }
-      closePublish();
-      renderCards();
-      showToast("已发布，对方登录后即可看到");
     });
 
     $("btn-close-detail").addEventListener("click", closeDetail);
@@ -373,102 +530,10 @@
       if (ev.target === $("detail-overlay")) closeDetail();
     });
 
-    $("btn-delete-record").addEventListener("click", function () {
-      if (!selectedRecord || !currentRole) return;
-      if (selectedRecord.receiver !== currentRole) return;
-      if (!window.confirm("确定删除这条记录吗？")) return;
-      var all = loadEntries().filter(function (e) {
-        return e.id !== selectedRecord.id;
-      });
-      if (!saveEntries(all)) {
-        showToast("保存失败，请稍后重试", true);
-        return;
-      }
-      closeDetail();
-      renderCards();
-      showToast("已删除");
-    });
-
-    $("btn-edit-record").addEventListener("click", function () {
-      if (!selectedRecord || !currentRole) return;
-      if (selectedRecord.receiver !== currentRole) return;
-      $("edit-id").value = selectedRecord.id;
-      $("edit-text").value = selectedRecord.text || "";
-      $("edit-files").value = "";
-      $("edit-preview").innerHTML = "";
-      $("edit-preview").dataset.existing = JSON.stringify(selectedRecord.images || []);
-      (selectedRecord.images || []).forEach(function (u) {
-        var im = document.createElement("img");
-        im.src = u;
-        $("edit-preview").appendChild(im);
-      });
-      $("detail-overlay").classList.add("hidden");
-      $("edit-overlay").classList.remove("hidden");
-    });
-
-    $("btn-close-edit").addEventListener("click", function () {
-      $("edit-overlay").classList.add("hidden");
-      if (selectedRecord) $("detail-overlay").classList.remove("hidden");
-    });
-    $("edit-overlay").addEventListener("click", function (ev) {
-      if (ev.target === $("edit-overlay")) {
-        $("edit-overlay").classList.add("hidden");
-        if (selectedRecord) $("detail-overlay").classList.remove("hidden");
-      }
-    });
-
-    $("edit-files").addEventListener("change", function () {
-      readFilesAsCompressed($("edit-files").files, function (newUrls) {
-        var existing = [];
-        try {
-          existing = JSON.parse($("edit-preview").dataset.existing || "[]");
-        } catch (e) {}
-        var merged = existing.concat(newUrls);
-        $("edit-preview").dataset.existing = JSON.stringify(merged);
-        renderPreview($("edit-preview"), merged);
-      });
-    });
-
-    $("edit-form").addEventListener("submit", function (ev) {
-      ev.preventDefault();
-      var id = $("edit-id").value;
-      var text = $("edit-text").value.trim();
-      var existing = [];
-      try {
-        existing = JSON.parse($("edit-preview").dataset.existing || "[]");
-      } catch (e) {}
-      if (!text && (!existing || !existing.length)) {
-        showToast("请保留文字或至少一张照片", true);
-        return;
-      }
-      var all = loadEntries().map(function (e) {
-        if (e.id !== id) return e;
-        if (e.receiver !== currentRole) return e;
-        return {
-          id: e.id,
-          publisher: e.publisher,
-          receiver: e.receiver,
-          text: text,
-          images: existing,
-          createdAt: e.createdAt
-        };
-      });
-      if (!saveEntries(all)) {
-        showToast("存储空间不足，请减少图片后重试", true);
-        return;
-      }
-      $("edit-overlay").classList.add("hidden");
-      closeDetail();
-      renderCards();
-      showToast("已保存修改");
-    });
-
     var saved = loadSession();
     if (saved) {
       currentRole = saved;
-      $("role-badge").textContent = "当前身份：" + ROLE_LABEL[saved];
-      setScreens(true);
-      renderCards();
+      enterApp(false);
     } else {
       setScreens(false);
     }

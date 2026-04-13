@@ -387,6 +387,12 @@ input[type="file"] {
   margin-right: auto;
 }
 
+.sync-banner {
+  max-width: 520px;
+  color: #8f7a82;
+  font-size: 0.74rem;
+}
+
 /* 卡片容器 */
 .cards-wrap {
   position: relative;
@@ -541,12 +547,6 @@ input[type="file"] {
   margin-top: 0.35rem;
 }
 
-.love-card__hint {
-  margin: 0.2rem 0 0;
-  font-size: 0.72rem;
-  color: var(--text-soft);
-}
-
 /* 弹层 */
 .overlay {
   position: fixed;
@@ -667,21 +667,10 @@ input[type="file"] {
 }
 
 .detail-text {
-  margin: 0 0 1rem;
+  margin: 0;
   font-size: 0.95rem;
   line-height: 1.65;
   white-space: pre-wrap;
-}
-
-.detail-actions {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.detail-actions .btn {
-  flex: 1;
-  min-width: 100px;
 }
 
 /* Toast */

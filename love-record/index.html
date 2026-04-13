@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta name="description" content="情侣双向爱意记录 — 专属私密空间" />
   <title>爱意记录 · Love Record</title>
-  <link rel="stylesheet" href="css/style.css?v=3" />
+  <link rel="stylesheet" href="css/style.css?v=5" />
 </head>
 <body>
   <div class="bg-particles" aria-hidden="true">
@@ -47,6 +47,7 @@
       <div class="toolbar">
         <button type="button" id="btn-open-publish" class="btn btn--primary">为 Ta 记录一条</button>
         <p class="hint">对方登录后将看到这条记录；自己不会看到已发布内容。</p>
+        <p id="sync-banner" class="hint sync-banner hidden" role="status"></p>
       </div>
 
       <div id="cards-wrap" class="cards-wrap">
@@ -85,38 +86,11 @@
       <div id="detail-date" class="detail-date"></div>
       <div id="detail-gallery" class="detail-gallery"></div>
       <p id="detail-text" class="detail-text"></p>
-      <div class="detail-actions">
-        <button type="button" id="btn-edit-record" class="btn btn--ghost">编辑</button>
-        <button type="button" id="btn-delete-record" class="btn btn--danger">删除</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- 编辑 -->
-  <div id="edit-overlay" class="overlay hidden" role="dialog" aria-modal="true">
-    <div class="panel glass">
-      <div class="panel-head">
-        <h2>编辑记录</h2>
-        <button type="button" id="btn-close-edit" class="icon-btn" aria-label="关闭">×</button>
-      </div>
-      <form id="edit-form" class="publish-form">
-        <input type="hidden" id="edit-id" />
-        <label class="field">
-          <span>文字</span>
-          <textarea id="edit-text" rows="5"></textarea>
-        </label>
-        <label class="field">
-          <span>追加照片（可选）</span>
-          <input type="file" id="edit-files" accept="image/*" multiple />
-        </label>
-        <div id="edit-preview" class="preview-grid"></div>
-        <button type="submit" class="btn btn--primary btn--block">保存</button>
-      </form>
     </div>
   </div>
 
   <div id="toast" class="toast hidden" role="status"></div>
 
-  <script src="js/main.js?v=3"></script>
+  <script src="js/main.js?v=5"></script>
 </body>
 </html>
