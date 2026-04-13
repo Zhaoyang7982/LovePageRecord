@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="description" content="情侣双向爱意记录 — 专属私密空间" />
+  <title>爱意记录 · Love Record</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <!-- 登录 -->
+  <section id="login-screen" class="screen screen--center" aria-label="登录">
+    <div class="login-card glass">
+      <h1 class="brand">爱意记录</h1>
+      <p class="tagline">为彼此留下温暖瞬间</p>
+      <form id="login-form" class="login-form" novalidate>
+        <label class="field">
+          <span>账号</span>
+          <input type="text" id="login-user" name="username" autocomplete="username" required placeholder="请输入账号" />
+        </label>
+        <label class="field">
+          <span>密码</span>
+          <input type="password" id="login-pass" name="password" autocomplete="current-password" required placeholder="请输入密码" />
+        </label>
+        <button type="submit" class="btn btn--primary btn--block">进入</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- 主界面 -->
+  <section id="app-screen" class="screen screen--app hidden" aria-label="主界面">
+    <header class="app-header glass">
+      <div class="header-left">
+        <h1 class="brand brand--small">爱意记录</h1>
+        <span id="role-badge" class="role-badge"></span>
+      </div>
+      <button type="button" id="btn-logout" class="btn btn--ghost">退出</button>
+    </header>
+
+    <main class="app-main">
+      <div class="toolbar">
+        <button type="button" id="btn-open-publish" class="btn btn--primary">为 Ta 记录一条</button>
+        <p class="hint">对方登录后将看到这条记录；自己不会看到已发布内容。</p>
+      </div>
+
+      <div id="cards-wrap" class="cards-wrap">
+        <p id="empty-tip" class="empty-tip hidden">Ta 还没有为你留下记录，把链接发给 Ta 吧～</p>
+        <div id="cards-container" class="cards-container"></div>
+      </div>
+    </main>
+  </section>
+
+  <!-- 发布面板 -->
+  <div id="publish-overlay" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="publish-title">
+    <div class="panel glass">
+      <div class="panel-head">
+        <h2 id="publish-title">为 Ta 写一条</h2>
+        <button type="button" id="btn-close-publish" class="icon-btn" aria-label="关闭">×</button>
+      </div>
+      <form id="publish-form" class="publish-form">
+        <label class="field">
+          <span>文字</span>
+          <textarea id="publish-text" rows="5" placeholder="写下想对 Ta 说的话、小事或心情…"></textarea>
+        </label>
+        <label class="field">
+          <span>照片（可选，可多选）</span>
+          <input type="file" id="publish-files" accept="image/*" multiple capture="environment" />
+        </label>
+        <div id="publish-preview" class="preview-grid"></div>
+        <button type="submit" class="btn btn--primary btn--block">发布</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 详情 -->
+  <div id="detail-overlay" class="overlay overlay--detail hidden" role="dialog" aria-modal="true">
+    <div class="detail-card glass">
+      <button type="button" id="btn-close-detail" class="icon-btn icon-btn--float" aria-label="关闭">×</button>
+      <div id="detail-date" class="detail-date"></div>
+      <div id="detail-gallery" class="detail-gallery"></div>
+      <p id="detail-text" class="detail-text"></p>
+      <div class="detail-actions">
+        <button type="button" id="btn-edit-record" class="btn btn--ghost">编辑</button>
+        <button type="button" id="btn-delete-record" class="btn btn--danger">删除</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 编辑 -->
+  <div id="edit-overlay" class="overlay hidden" role="dialog" aria-modal="true">
+    <div class="panel glass">
+      <div class="panel-head">
+        <h2>编辑记录</h2>
+        <button type="button" id="btn-close-edit" class="icon-btn" aria-label="关闭">×</button>
+      </div>
+      <form id="edit-form" class="publish-form">
+        <input type="hidden" id="edit-id" />
+        <label class="field">
+          <span>文字</span>
+          <textarea id="edit-text" rows="5"></textarea>
+        </label>
+        <label class="field">
+          <span>追加照片（可选）</span>
+          <input type="file" id="edit-files" accept="image/*" multiple />
+        </label>
+        <div id="edit-preview" class="preview-grid"></div>
+        <button type="submit" class="btn btn--primary btn--block">保存</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden" role="status"></div>
+
+  <script src="js/main.js"></script>
+</body>
+</html>
