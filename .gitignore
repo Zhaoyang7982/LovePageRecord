@@ -1,2 +1,5 @@
 .DS_Store
 *.log
+
+# Supabase 密钥仅存在于本地或 CI 生成的 Pages 产物，勿提交
+love-record/js/config.js
