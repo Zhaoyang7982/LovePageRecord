@@ -34,6 +34,169 @@ body {
   color: var(--text);
   background: linear-gradient(165deg, var(--bg-top) 0%, var(--bg-mid) 45%, var(--bg-bottom) 100%);
   background-attachment: fixed;
+  position: relative;
+}
+
+/* 背景粒子：轻、慢、不抢内容 */
+.bg-particles {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.particle {
+  position: absolute;
+  border-radius: 50%;
+  animation: particle-drift ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+@keyframes particle-drift {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.22;
+  }
+  50% {
+    transform: translate(12px, -18px) scale(1.05);
+    opacity: 0.42;
+  }
+}
+
+.particle:nth-child(1) {
+  left: 8%;
+  top: 14%;
+  width: 7px;
+  height: 7px;
+  background: rgba(232, 160, 191, 0.45);
+  animation-duration: 16s;
+  animation-delay: 0s;
+}
+.particle:nth-child(2) {
+  left: 22%;
+  top: 8%;
+  width: 5px;
+  height: 5px;
+  background: rgba(168, 200, 232, 0.5);
+  animation-duration: 13s;
+  animation-delay: -2s;
+}
+.particle:nth-child(3) {
+  left: 78%;
+  top: 12%;
+  width: 6px;
+  height: 6px;
+  background: rgba(232, 160, 191, 0.4);
+  animation-duration: 18s;
+  animation-delay: -4s;
+}
+.particle:nth-child(4) {
+  left: 88%;
+  top: 28%;
+  width: 4px;
+  height: 4px;
+  background: rgba(200, 180, 220, 0.45);
+  animation-duration: 14s;
+  animation-delay: -1s;
+}
+.particle:nth-child(5) {
+  left: 12%;
+  top: 42%;
+  width: 5px;
+  height: 5px;
+  background: rgba(168, 200, 232, 0.38);
+  animation-duration: 17s;
+  animation-delay: -6s;
+}
+.particle:nth-child(6) {
+  left: 45%;
+  top: 6%;
+  width: 6px;
+  height: 6px;
+  background: rgba(255, 200, 210, 0.5);
+  animation-duration: 15s;
+  animation-delay: -3s;
+}
+.particle:nth-child(7) {
+  left: 62%;
+  top: 38%;
+  width: 5px;
+  height: 5px;
+  background: rgba(232, 160, 191, 0.35);
+  animation-duration: 19s;
+  animation-delay: -5s;
+}
+.particle:nth-child(8) {
+  left: 92%;
+  top: 55%;
+  width: 7px;
+  height: 7px;
+  background: rgba(168, 200, 232, 0.35);
+  animation-duration: 12s;
+  animation-delay: -7s;
+}
+.particle:nth-child(9) {
+  left: 6%;
+  top: 68%;
+  width: 5px;
+  height: 5px;
+  background: rgba(232, 160, 191, 0.4);
+  animation-duration: 16s;
+  animation-delay: -8s;
+}
+.particle:nth-child(10) {
+  left: 35%;
+  top: 72%;
+  width: 4px;
+  height: 4px;
+  background: rgba(200, 180, 220, 0.42);
+  animation-duration: 14s;
+  animation-delay: -2.5s;
+}
+.particle:nth-child(11) {
+  left: 72%;
+  top: 78%;
+  width: 6px;
+  height: 6px;
+  background: rgba(255, 210, 220, 0.45);
+  animation-duration: 17s;
+  animation-delay: -9s;
+}
+.particle:nth-child(12) {
+  left: 52%;
+  top: 88%;
+  width: 5px;
+  height: 5px;
+  background: rgba(168, 200, 232, 0.4);
+  animation-duration: 15s;
+  animation-delay: -4.5s;
+}
+.particle:nth-child(13) {
+  left: 18%;
+  top: 88%;
+  width: 6px;
+  height: 6px;
+  background: rgba(232, 160, 191, 0.38);
+  animation-duration: 18s;
+  animation-delay: -1.5s;
+}
+.particle:nth-child(14) {
+  left: 85%;
+  top: 90%;
+  width: 4px;
+  height: 4px;
+  background: rgba(168, 200, 232, 0.48);
+  animation-duration: 13s;
+  animation-delay: -6.5s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .particle {
+    animation: none;
+    opacity: 0.25;
+  }
 }
 
 .hidden {
@@ -41,8 +204,10 @@ body {
 }
 
 .screen {
+  position: relative;
+  z-index: 1;
   min-height: 100vh;
-  padding: 1.25rem;
+  padding: clamp(2rem, 7vmin, 3.75rem) clamp(1.25rem, 4vw, 2rem);
 }
 
 .screen--center {
@@ -54,7 +219,8 @@ body {
 .screen--app {
   display: flex;
   flex-direction: column;
-  padding-bottom: 2rem;
+  padding-top: clamp(1.5rem, 5vmin, 2.75rem);
+  padding-bottom: clamp(3rem, 10vmin, 5rem);
 }
 
 .glass {
@@ -182,7 +348,7 @@ input[type="file"] {
   align-items: center;
   justify-content: space-between;
   padding: 0.75rem 1rem;
-  margin: 0 0 1rem;
+  margin: 0 0 clamp(1.25rem, 4vmin, 2rem);
   border-radius: var(--radius);
 }
 
@@ -202,10 +368,12 @@ input[type="file"] {
   max-width: 1100px;
   width: 100%;
   margin: 0 auto;
+  padding-bottom: clamp(1.5rem, 5vmin, 3rem);
 }
 
 .toolbar {
-  margin-bottom: 1.25rem;
+  margin-bottom: clamp(1.5rem, 5vmin, 2.5rem);
+  padding-top: clamp(0.25rem, 2vmin, 0.75rem);
   text-align: center;
 }
 
@@ -223,6 +391,7 @@ input[type="file"] {
 .cards-wrap {
   position: relative;
   min-height: 200px;
+  padding-bottom: clamp(1.25rem, 5vmin, 3rem);
 }
 
 .empty-tip {
@@ -317,6 +486,27 @@ input[type="file"] {
   overflow: hidden;
 }
 
+.love-card__img-wrap--text {
+  aspect-ratio: auto;
+  min-height: 6.5rem;
+  max-height: 11rem;
+  padding: 0.85rem 0.8rem;
+  display: flex;
+  align-items: flex-start;
+}
+
+.love-card__preview-text {
+  margin: 0;
+  width: 100%;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: var(--text);
+  display: -webkit-box;
+  -webkit-line-clamp: 7;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 .love-card__img-wrap img {
   width: 100%;
   height: 100%;
@@ -349,6 +539,12 @@ input[type="file"] {
   font-size: 0.7rem;
   color: var(--accent-deep);
   margin-top: 0.35rem;
+}
+
+.love-card__hint {
+  margin: 0.2rem 0 0;
+  font-size: 0.72rem;
+  color: var(--text-soft);
 }
 
 /* 弹层 */

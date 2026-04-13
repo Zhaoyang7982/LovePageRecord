@@ -210,24 +210,37 @@
       card.className = "love-card " + floatClass(i);
       card.style.animationDelay = (i % 5) * 0.4 + "s";
       card.setAttribute("data-id", rec.id);
+      var hasImg = rec.images && rec.images.length > 0;
       var imgWrap = document.createElement("div");
-      imgWrap.className = "love-card__img-wrap";
-      if (rec.images && rec.images.length) {
+      imgWrap.className = "love-card__img-wrap" + (hasImg ? "" : " love-card__img-wrap--text");
+      if (hasImg) {
         var im = document.createElement("img");
         im.src = rec.images[0];
         im.alt = "";
         imgWrap.appendChild(im);
+      } else {
+        var preview = document.createElement("p");
+        preview.className = "love-card__preview-text";
+        preview.textContent = rec.text || "（无文字）";
+        imgWrap.appendChild(preview);
       }
       var body = document.createElement("div");
       body.className = "love-card__body";
       var dateEl = document.createElement("div");
       dateEl.className = "love-card__date";
       dateEl.textContent = formatDate(rec.createdAt);
-      var textEl = document.createElement("p");
-      textEl.className = "love-card__text";
-      textEl.textContent = rec.text || "（无文字）";
       body.appendChild(dateEl);
-      body.appendChild(textEl);
+      if (hasImg) {
+        var textEl = document.createElement("p");
+        textEl.className = "love-card__text";
+        textEl.textContent = rec.text || "（无文字）";
+        body.appendChild(textEl);
+      } else {
+        var hint = document.createElement("p");
+        hint.className = "love-card__hint";
+        hint.textContent = "点击查看全文";
+        body.appendChild(hint);
+      }
       if (rec.images && rec.images.length > 1) {
         var more = document.createElement("div");
         more.className = "love-card__more";
