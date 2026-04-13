@@ -8,8 +8,8 @@
 
   /** @type {{ female: {username:string,password:string}, male: {username:string,password:string} }} */
   var ACCOUNTS = {
-    female: { username: "nvfang", password: "love2026" },
-    male: { username: "nanfang", password: "love2026" }
+    female: { username: "yuyu", password: "0321" },
+    male: { username: "qiqi", password: "1112" }
   };
 
   var ROLE_LABEL = { female: "女方", male: "男方" };
