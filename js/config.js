@@ -1,0 +1,1 @@
+window.__LOVE_RECORD_CONFIG__ = {"SUPABASE_URL": "", "SUPABASE_ANON_KEY": ""};

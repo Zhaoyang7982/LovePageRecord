@@ -1,10 +1,12 @@
 /**
  * 情侣双向爱意记录
  * 登录状态：浏览器 LocalStorage
- * 记录：填写下方 SUPABASE_URL + SUPABASE_ANON_KEY 后走云端，任意设备同一站点即可同步查看
- * 不填则仅用本机 LocalStorage（换设备看不到）
+ * 云端：由 js/config.js 注入 window.__LOVE_RECORD_CONFIG__（URL + anon key）
+ *   - 线上：GitHub Actions 从仓库 Secrets 生成 config.js，勿把密钥写进 main.js
+ *   - 本地：复制 js/config.example.js 为 js/config.js 后填写
+ * 未配置则仅用本机 LocalStorage
  *
- * 建表：将 supabase/schema.sql 在 Supabase → SQL Editor 中执行一次
+ * 建表：love-record/supabase/schema.sql 在 Supabase SQL Editor 执行一次
  */
 (function () {
   var STORAGE_SESSION = "loveRecord_session";
@@ -12,10 +14,16 @@
   var EMPTY_TIP =
     "Ta 还没有为你留下记录，把链接发给 Ta 吧～";
 
-  /** 例: https://xxxxxxxx.supabase.co */
-  var SUPABASE_URL = "https://bxxkukqfsttbieehwrsh.supabase.co";
-  /** Project Settings → API → anon public */
-  var SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ4eGt1a3Fmc3R0YmllZWh3cnNoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwOTg4OTksImV4cCI6MjA5MTY3NDg5OX0.CGNqVLrly7P52oHZZYf_psQtTa_J1rlhu9ljPQKHMiU";
+  var cfg =
+    typeof window !== "undefined" && window.__LOVE_RECORD_CONFIG__
+      ? window.__LOVE_RECORD_CONFIG__
+      : {};
+  var SUPABASE_URL =
+    typeof cfg.SUPABASE_URL === "string" ? cfg.SUPABASE_URL.trim() : "";
+  var SUPABASE_ANON_KEY =
+    typeof cfg.SUPABASE_ANON_KEY === "string"
+      ? cfg.SUPABASE_ANON_KEY.trim()
+      : "";
 
   /** @type {{ female: {username:string,password:string}, male: {username:string,password:string} }} */
   var ACCOUNTS = {
@@ -196,7 +204,7 @@
       b.textContent = "";
     } else {
       b.textContent =
-        "当前为仅本机存储，换设备看不到记录。在 js/main.js 填写 Supabase 的 URL 与 anon key 即可多端同步（见 supabase/schema.sql）。";
+        "当前为仅本机存储。线上请在 GitHub 仓库 Settings → Secrets 添加 SUPABASE_URL、SUPABASE_ANON_KEY；本地可复制 js/config.example.js 为 config.js 填写（见 supabase/schema.sql）。";
       b.classList.remove("hidden");
     }
   }
