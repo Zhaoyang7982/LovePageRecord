@@ -1,14 +1,15 @@
 name: Deploy GitHub Pages
 
+# 将 love-record 目录推送到 gh-pages 分支，由「从分支发布 Pages」提供站点。
+# 仓库 Settings → Pages：Source 选「Deploy from a branch」，Branch 选 gh-pages，文件夹选 / (root)。
+
 on:
   push:
     branches: ["main"]
   workflow_dispatch:
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: write
 
 concurrency:
   group: "pages"
@@ -16,22 +17,13 @@ concurrency:
 
 jobs:
   deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Pages
-        uses: actions/configure-pages@v4
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+      - name: Push love-record to gh-pages branch
+        uses: peaceiris/actions-gh-pages@v4
         with:
-          path: love-record
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./love-record
