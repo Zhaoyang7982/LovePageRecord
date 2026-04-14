@@ -2,7 +2,8 @@ name: Deploy GitHub Pages
 
 # 将 love-record 目录推送到 gh-pages 分支，由「从分支发布 Pages」提供站点。
 # 仓库 Settings → Pages：Source 选「Deploy from a branch」，Branch 选 gh-pages，文件夹选 / (root)。
-# 密钥：Settings → Secrets and variables → Actions → 新建 SUPABASE_URL、SUPABASE_ANON_KEY（勿写进代码）。
+# 密钥：Settings → Secrets → Actions 中配置 SUPABASE_URL、SUPABASE_ANON_KEY；
+# CI 写入 love-record/app.env 再生成 js/config.js，勿把 app.env / config.js 提交到 main。
 
 on:
   push:
@@ -23,22 +24,25 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # 从仓库 Secrets 写入 config.js，密钥不进 main 分支源码
-      - name: Write Supabase config
+      - name: Write app.env from GitHub Secrets
         env:
-          SB_URL: ${{ secrets.SUPABASE_URL }}
-          SB_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
         run: |
           python3 << 'PY'
           import json, os
-          url = (os.environ.get("SB_URL") or "").strip()
-          key = (os.environ.get("SB_KEY") or "").strip()
-          cfg = {"SUPABASE_URL": url, "SUPABASE_ANON_KEY": key}
-          with open("love-record/js/config.js", "w", encoding="utf-8") as f:
-              f.write("window.__LOVE_RECORD_CONFIG__ = ")
-              f.write(json.dumps(cfg, ensure_ascii=False))
-              f.write(";\n")
+          keys = ["SUPABASE_URL", "SUPABASE_ANON_KEY"]
+          with open("love-record/app.env", "w", encoding="utf-8") as f:
+              for k in keys:
+                  v = (os.environ.get(k) or "").strip()
+                  f.write(k + "=" + json.dumps(v) + "\n")
           PY
+
+      - name: Generate js/config.js from app.env
+        run: python3 love-record/scripts/render-config-from-env.py
+
+      - name: Remove app.env before publish
+        run: rm -f love-record/app.env
 
       - name: Push love-record to gh-pages branch
         uses: peaceiris/actions-gh-pages@v4
