@@ -202,11 +202,21 @@
     if (useRemote()) {
       b.classList.add("hidden");
       b.textContent = "";
+      return;
+    }
+    // 给使用者看的说明；技术配置见 app.env.example 与仓库 README/Workflow 注释
+    var devHint = false;
+    try {
+      devHint = /[?&]dev=1(?:&|$)/.test(String(window.location && window.location.search));
+    } catch (e) {}
+    if (devHint) {
+      b.textContent =
+        "[维护] 未检测到云端：请检查 GitHub Actions Secrets（SUPABASE_URL、SUPABASE_ANON_KEY）是否已配置并已重新部署；本地见 app.env.example。";
     } else {
       b.textContent =
-        "当前为仅本机存储。线上：GitHub Secrets 填 SUPABASE_URL、SUPABASE_ANON_KEY；本地：复制 app.env.example 为 app.env 填写后执行 python3 love-record/scripts/render-config-from-env.py（见 supabase/schema.sql）。";
-      b.classList.remove("hidden");
+        "记录目前只保存在本手机浏览器；换设备或清理数据后，旧记录不会自动出现。两台手机要看同一份，需要先完成云端配置。";
     }
+    b.classList.remove("hidden");
   }
 
   /**
