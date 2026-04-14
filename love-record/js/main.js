@@ -11,9 +11,9 @@
     "Ta 还没有为你留下记录，把链接发给 Ta 吧～";
 
   /** 例 https://xxxx.supabase.co */
-  var SUPABASE_URL = "";
+  var SUPABASE_URL = "https://bxxkukqfsttbieehwrsh.supabase.co";
   /** 一长串 eyJ... 的 anon key */
-  var SUPABASE_ANON_KEY = "";
+  var SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ4eGt1a3Fmc3R0YmllZWh3cnNoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwOTg4OTksImV4cCI6MjA5MTY3NDg5OX0.CGNqVLrly7P52oHZZYf_psQtTa_J1rlhu9ljPQKHMiU";
 
   /** @type {{ female: {username:string,password:string}, male: {username:string,password:string} }} */
   var ACCOUNTS = {
