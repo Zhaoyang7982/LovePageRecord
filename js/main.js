@@ -1,9 +1,9 @@
 /**
  * 情侣双向爱意记录
  * 登录状态：浏览器 LocalStorage
- * 云端：由 js/config.js 注入 window.__LOVE_RECORD_CONFIG__（URL + anon key）
- *   - 线上：GitHub Actions 从仓库 Secrets 生成 config.js，勿把密钥写进 main.js
- *   - 本地：复制 js/config.example.js 为 js/config.js 后填写
+ * 云端：由 js/config.js 注入 window.__LOVE_RECORD_CONFIG__
+ *   - 配置写在 love-record/app.env（勿提交），运行 scripts/render-config-from-env.py 生成 config.js
+ *   - 线上：Actions 从 Secrets 写入 app.env 再执行同一脚本
  * 未配置则仅用本机 LocalStorage
  *
  * 建表：love-record/supabase/schema.sql 在 Supabase SQL Editor 执行一次
@@ -204,7 +204,7 @@
       b.textContent = "";
     } else {
       b.textContent =
-        "当前为仅本机存储。线上请在 GitHub 仓库 Settings → Secrets 添加 SUPABASE_URL、SUPABASE_ANON_KEY；本地可复制 js/config.example.js 为 config.js 填写（见 supabase/schema.sql）。";
+        "当前为仅本机存储。线上：GitHub Secrets 填 SUPABASE_URL、SUPABASE_ANON_KEY；本地：复制 app.env.example 为 app.env 填写后执行 python3 love-record/scripts/render-config-from-env.py（见 supabase/schema.sql）。";
       b.classList.remove("hidden");
     }
   }
