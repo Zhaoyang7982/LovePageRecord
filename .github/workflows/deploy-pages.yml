@@ -1,9 +1,6 @@
 name: Deploy GitHub Pages
 
-# 将 love-record 目录推送到 gh-pages 分支，由「从分支发布 Pages」提供站点。
-# 仓库 Settings → Pages：Source 选「Deploy from a branch」，Branch 选 gh-pages，文件夹选 / (root)。
-# 密钥：Settings → Secrets → Actions 中配置 SUPABASE_URL、SUPABASE_ANON_KEY；
-# CI 写入 love-record/app.env 再生成 js/config.js，勿把 app.env / config.js 提交到 main。
+# love-record → gh-pages；Pages 设置：Deploy from branch → gh-pages → / (root)
 
 on:
   push:
@@ -23,26 +20,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Write app.env from GitHub Secrets
-        env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
-        run: |
-          python3 << 'PY'
-          import json, os
-          keys = ["SUPABASE_URL", "SUPABASE_ANON_KEY"]
-          with open("love-record/app.env", "w", encoding="utf-8") as f:
-              for k in keys:
-                  v = (os.environ.get(k) or "").strip()
-                  f.write(k + "=" + json.dumps(v) + "\n")
-          PY
-
-      - name: Generate js/config.js from app.env
-        run: python3 love-record/scripts/render-config-from-env.py
-
-      - name: Remove app.env before publish
-        run: rm -f love-record/app.env
 
       - name: Push love-record to gh-pages branch
         uses: peaceiris/actions-gh-pages@v4

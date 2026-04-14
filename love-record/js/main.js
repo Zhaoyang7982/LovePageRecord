@@ -1,12 +1,8 @@
 /**
- * 情侣双向爱意记录
- * 登录状态：浏览器 LocalStorage
- * 云端：由 js/config.js 注入 window.__LOVE_RECORD_CONFIG__
- *   - 配置写在 love-record/app.env（勿提交），运行 scripts/render-config-from-env.py 生成 config.js
- *   - 线上：Actions 从 Secrets 写入 app.env 再执行同一脚本
- * 未配置则仅用本机 LocalStorage
- *
- * 建表：love-record/supabase/schema.sql 在 Supabase SQL Editor 执行一次
+ * 情侣双向爱意记录 — 最简用法
+ * 下面两行填 Supabase 的「项目 URL」和「anon public key」，保存后推送，手机电脑就都能读云端。
+ * 留空 = 只用本机浏览器存，换设备看不到。
+ * 建表：supabase/schema.sql 在 Supabase SQL Editor 执行一次。
  */
 (function () {
   var STORAGE_SESSION = "loveRecord_session";
@@ -14,16 +10,10 @@
   var EMPTY_TIP =
     "Ta 还没有为你留下记录，把链接发给 Ta 吧～";
 
-  var cfg =
-    typeof window !== "undefined" && window.__LOVE_RECORD_CONFIG__
-      ? window.__LOVE_RECORD_CONFIG__
-      : {};
-  var SUPABASE_URL =
-    typeof cfg.SUPABASE_URL === "string" ? cfg.SUPABASE_URL.trim() : "";
-  var SUPABASE_ANON_KEY =
-    typeof cfg.SUPABASE_ANON_KEY === "string"
-      ? cfg.SUPABASE_ANON_KEY.trim()
-      : "";
+  /** 例 https://xxxx.supabase.co */
+  var SUPABASE_URL = "";
+  /** 一长串 eyJ... 的 anon key */
+  var SUPABASE_ANON_KEY = "";
 
   /** @type {{ female: {username:string,password:string}, male: {username:string,password:string} }} */
   var ACCOUNTS = {
@@ -204,17 +194,16 @@
       b.textContent = "";
       return;
     }
-    // 给使用者看的说明；技术配置见 app.env.example 与仓库 README/Workflow 注释
     var devHint = false;
     try {
       devHint = /[?&]dev=1(?:&|$)/.test(String(window.location && window.location.search));
     } catch (e) {}
     if (devHint) {
       b.textContent =
-        "[维护] 未检测到云端：请检查 GitHub Actions Secrets（SUPABASE_URL、SUPABASE_ANON_KEY）是否已配置并已重新部署；本地见 app.env.example。";
+        "[维护] 云端未启用：在 js/main.js 顶部给 SUPABASE_URL、SUPABASE_ANON_KEY 赋值后保存并推送。";
     } else {
       b.textContent =
-        "记录目前只保存在本手机浏览器；换设备或清理数据后，旧记录不会自动出现。两台手机要看同一份，需要先完成云端配置。";
+        "记录目前只保存在本手机；换设备看不到。两台手机共用一份请在电脑里打开 js/main.js，填好 Supabase 两行后重新上传网站。";
     }
     b.classList.remove("hidden");
   }
