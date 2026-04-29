@@ -660,10 +660,9 @@
       gal.appendChild(im);
     });
     $("detail-text").textContent = rec.text || "";
-    $("btn-edit-detail").classList.toggle(
-      "hidden",
-      !(rec && rec.publisher === currentRole)
-    );
+    var canManage = !!(rec && rec.publisher === currentRole);
+    $("btn-edit-detail").classList.toggle("hidden", !canManage);
+    $("btn-delete-detail").classList.toggle("hidden", !canManage);
     $("detail-overlay").classList.remove("hidden");
   }
 
@@ -687,7 +686,6 @@
     editingRecordId = null;
     $("publish-title").textContent = "为 Ta 写一条";
     $("publish-form").querySelector('button[type="submit"]').textContent = "发布";
-    $("btn-delete-record").classList.add("hidden");
     $("publish-text").value = "";
     $("publish-files-camera").value = "";
     $("publish-files-album").value = "";
@@ -701,7 +699,6 @@
     editingRecordId = rec.id;
     $("publish-title").textContent = "编辑这条记录";
     $("publish-form").querySelector('button[type="submit"]').textContent = "保存修改";
-    $("btn-delete-record").classList.remove("hidden");
     $("publish-text").value = rec.text || "";
     $("publish-files-camera").value = "";
     $("publish-files-album").value = "";
@@ -905,10 +902,10 @@
       }
     });
 
-    $("btn-delete-record").addEventListener("click", function () {
-      if (!editingRecordId) return;
+    $("btn-delete-detail").addEventListener("click", function () {
+      if (!selectedRecord || selectedRecord.publisher !== currentRole) return;
       if (!window.confirm("确认删除这条记录吗？删除后无法恢复。")) return;
-      var targetId = editingRecordId;
+      var targetId = selectedRecord.id;
       if (useRemote()) {
         deleteEntryRemote(targetId)
           .then(function () {
@@ -917,7 +914,7 @@
           .then(function (rows) {
             entriesCache = rows;
             editingRecordId = null;
-            closePublish();
+            closeDetail();
             renderCards();
             showToast("记录已删除");
           })
@@ -934,7 +931,7 @@
         }
         entriesCache = all;
         editingRecordId = null;
-        closePublish();
+        closeDetail();
         renderCards();
         showToast("记录已删除");
       }

@@ -18,6 +18,12 @@ create policy "love_select" on public.love_entries for select using (true);
 drop policy if exists "love_insert" on public.love_entries;
 create policy "love_insert" on public.love_entries for insert with check (true);
 
+drop policy if exists "love_update" on public.love_entries;
+create policy "love_update" on public.love_entries for update using (true) with check (true);
+
+drop policy if exists "love_delete" on public.love_entries;
+create policy "love_delete" on public.love_entries for delete using (true);
+
 create table if not exists public.love_travel_cities (
   id text primary key,
   city_name text not null,
