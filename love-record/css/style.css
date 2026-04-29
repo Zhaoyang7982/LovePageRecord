@@ -390,6 +390,10 @@ input[type="file"] {
   border: 1px solid rgba(201, 123, 163, 0.35);
 }
 
+#btn-delete-record {
+  margin-top: 0.55rem;
+}
+
 /* 头部 */
 .app-header {
   display: flex;
@@ -429,6 +433,13 @@ input[type="file"] {
   font-size: 1rem;
 }
 
+.travel-stats {
+  margin: 0 0 0.7rem;
+  color: var(--accent-deep);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
 .travel-form {
   display: grid;
   grid-template-columns: 1fr 160px auto;
@@ -437,7 +448,7 @@ input[type="file"] {
 
 .travel-map {
   margin-top: 0.7rem;
-  height: 260px;
+  height: 420px;
   border-radius: 12px;
   overflow: hidden;
   border: 1px solid var(--glass-border);

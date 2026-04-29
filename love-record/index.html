@@ -86,6 +86,7 @@
     <main class="app-main">
       <div class="toolbar">
         <button type="button" id="btn-open-publish" class="btn btn--primary">为 Ta 记录一条</button>
+        <button type="button" id="btn-open-travel" class="btn btn--ghost">奇奇玉玉旅游去过的地方</button>
         <div class="view-switch" role="tablist" aria-label="记录视图切换">
           <button type="button" id="btn-view-received" class="btn btn--ghost btn--sm is-active">对方为我</button>
           <button type="button" id="btn-view-sent" class="btn btn--ghost btn--sm">我为对方</button>
@@ -99,9 +100,21 @@
         <p id="empty-tip" class="empty-tip hidden">Ta 还没有为你留下记录，把链接发给 Ta 吧～</p>
         <div id="cards-container" class="cards-container"></div>
       </div>
+    </main>
+  </section>
 
+  <section id="travel-screen" class="screen screen--app hidden" aria-label="旅行足迹页面">
+    <header class="app-header glass">
+      <div class="header-left">
+        <h1 class="brand brand--small">旅行足迹</h1>
+        <span class="role-badge">奇奇玉玉旅游去过的地方</span>
+      </div>
+      <button type="button" id="btn-back-app" class="btn btn--ghost">返回主页</button>
+    </header>
+    <main class="app-main">
       <section class="travel-section glass" aria-label="旅行足迹">
         <h2 class="travel-title">我们旅游去过的地方</h2>
+        <p id="travel-stats" class="travel-stats"></p>
         <form id="travel-form" class="travel-form">
           <input id="travel-city" type="text" placeholder="城市名（如：上海）" required />
           <input id="travel-date" type="date" />
@@ -137,6 +150,7 @@
         </label>
         <div id="publish-preview" class="preview-grid"></div>
         <button type="submit" class="btn btn--primary btn--block">发布</button>
+        <button type="button" id="btn-delete-record" class="btn btn--danger btn--block hidden">删除这条记录</button>
       </form>
     </div>
   </div>

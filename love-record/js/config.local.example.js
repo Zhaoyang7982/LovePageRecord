@@ -9,8 +9,8 @@
     SUPABASE_URL: "https://你的项目.supabase.co",
     SUPABASE_ANON_KEY: "eyJ... Supabase 设置里的 anon public key",
     ACCOUNTS: {
-      female: { username: "女方账号", password: "女方密码" },
-      male: { username: "男方账号", password: "男方密码" }
+      female: { username: "玉玉账号", password: "玉玉密码" },
+      male: { username: "奇奇账号", password: "奇奇密码" }
     }
   });
 })();

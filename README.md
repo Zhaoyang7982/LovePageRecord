@@ -11,7 +11,7 @@
 
 ## 核心功能
 
-- 双账号登录与角色区分（女方 / 男方）
+- 双账号登录与角色区分（玉玉 / 奇奇）
 - 为对方发布记录（文字 + 多图）
 - 图片来源支持手机拍照与本地相册选择
 - 发布前可删除已选图片
@@ -93,10 +93,10 @@ npx --yes serve .
 |-------------|------|
 | `SUPABASE_URL` | Supabase 项目地址 |
 | `SUPABASE_ANON_KEY` | Supabase 匿名公钥 |
-| `LOVE_FEMALE_USERNAME` | 女方账号 |
-| `LOVE_FEMALE_PASSWORD` | 女方密码 |
-| `LOVE_MALE_USERNAME` | 男方账号 |
-| `LOVE_MALE_PASSWORD` | 男方密码 |
+| `LOVE_FEMALE_USERNAME` | 玉玉账号 |
+| `LOVE_FEMALE_PASSWORD` | 玉玉密码 |
+| `LOVE_MALE_USERNAME` | 奇奇账号 |
+| `LOVE_MALE_PASSWORD` | 奇奇密码 |
 
 ---
 
