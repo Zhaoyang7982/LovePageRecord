@@ -483,7 +483,7 @@
       '<h3 class="countdown-title">重要日期倒计时</h3>' +
       '<p><span>玉玉生日：</span><strong>' + dFemale + "</strong><span> 天后</span></p>" +
       '<p><span>奇奇生日：</span><strong>' + dMale + "</strong><span> 天后</span></p>" +
-      '<p><span>恋爱纪念日：</span><strong>' + dLove + "</strong><span> 天后</span></p>";
+      '<p><span>距离恋爱纪念日6.9还有</span><strong>' + dLove + "</strong><span> 天</span></p>";
   }
 
   function highlightKeywords(text) {
