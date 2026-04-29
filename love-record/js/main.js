@@ -238,9 +238,9 @@
     var empty = $("empty-tip");
     var box = $("cards-container");
     if (on) {
-      empty.textContent = "正在从云端加载记录…";
-      empty.classList.remove("hidden");
-      box.classList.add("hidden");
+      empty.classList.add("hidden");
+      box.classList.remove("hidden");
+      renderSkeletonCards(box, 6);
     } else {
       box.classList.remove("hidden");
     }
@@ -480,9 +480,34 @@
     var dFemale = daysUntil(11, 12);
     var dLove = daysUntil(6, 9);
     el.innerHTML =
-      '<p>距离玉玉的生日11.12还有 <strong>' + dFemale + "</strong> 天</p>" +
-      '<p>距离奇奇的生日3.21还有 <strong>' + dMale + "</strong> 天</p>" +
-      '<p>距离恋爱纪念日还有 <strong>' + dLove + "</strong> 天</p>";
+      '<h3 class="countdown-title">重要日期倒计时</h3>' +
+      '<p><span>玉玉生日：</span><strong>' + dFemale + "</strong><span> 天后</span></p>" +
+      '<p><span>奇奇生日：</span><strong>' + dMale + "</strong><span> 天后</span></p>" +
+      '<p><span>恋爱纪念日：</span><strong>' + dLove + "</strong><span> 天后</span></p>";
+  }
+
+  function highlightKeywords(text) {
+    var safe = String(text || "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+    return safe.replace(/(宝宝|玉玉|奇奇)/g, '<span class="kw">$1</span>');
+  }
+
+  function renderSkeletonCards(container, count) {
+    container.innerHTML = "";
+    for (var i = 0; i < count; i++) {
+      var card = document.createElement("article");
+      card.className = "love-card love-card--skeleton";
+      card.innerHTML =
+        '<div class="skeleton skeleton-img"></div>' +
+        '<div class="love-card__body">' +
+        '<div class="skeleton skeleton-line skeleton-line--1"></div>' +
+        '<div class="skeleton skeleton-line skeleton-line--2"></div>' +
+        '<div class="skeleton skeleton-line skeleton-line--3"></div>' +
+        "</div>";
+      container.appendChild(card);
+    }
   }
 
   function geocodeCity(city, done) {
@@ -589,8 +614,9 @@
       var sentCount = entriesCache.filter(function (e) {
         return e && e.publisher === currentRole;
       }).length;
-      stats.textContent =
-        "对方为我做了 " + receivedCount + " 条记录 · 我为对方做了 " + sentCount + " 条记录";
+      stats.innerHTML =
+        '对方为我做了 <strong>' + receivedCount +
+        "</strong> 条记录 ・ 我为对方做了 <strong>" + sentCount + "</strong> 条记录";
     }
     var empty = $("empty-tip");
     var box = $("cards-container");
@@ -599,13 +625,16 @@
       ? "你还没有为 Ta 发布记录，点击上方按钮开始记录吧～"
       : EMPTY_TIP;
     empty.classList.toggle("hidden", entries.length > 0);
+    if (entries.length === 0) {
+      empty.innerHTML = '<div class="empty-illus">💌</div><div class="empty-main">还没有记录</div><div class="empty-sub">点击上方按钮，写下你们的第一条心动瞬间吧。</div>';
+    }
     entries.sort(function (a, b) {
       return new Date(b.createdAt) - new Date(a.createdAt);
     });
     entries.forEach(function (rec, i) {
       var card = document.createElement("article");
       card.className = "love-card " + floatClass(i);
-      card.style.animationDelay = (i % 5) * 0.4 + "s";
+      card.style.marginTop = (i % 3) * 8 + "px";
       card.setAttribute("data-id", rec.id);
       var hasImg = rec.images && rec.images.length > 0;
       var imgWrap = document.createElement("div");
@@ -618,19 +647,15 @@
       } else {
         var preview = document.createElement("p");
         preview.className = "love-card__preview-text";
-        preview.textContent = rec.text || "（无文字）";
+        preview.innerHTML = highlightKeywords(rec.text || "（无文字）");
         imgWrap.appendChild(preview);
       }
       var body = document.createElement("div");
       body.className = "love-card__body";
-      var dateEl = document.createElement("div");
-      dateEl.className = "love-card__date";
-      dateEl.textContent = formatDate(rec.createdAt);
-      body.appendChild(dateEl);
       if (hasImg) {
         var textEl = document.createElement("p");
         textEl.className = "love-card__text";
-        textEl.textContent = rec.text || "（无文字）";
+        textEl.innerHTML = highlightKeywords(rec.text || "（无文字）");
         body.appendChild(textEl);
       }
       if (rec.images && rec.images.length > 1) {
@@ -639,6 +664,10 @@
         more.textContent = "共 " + rec.images.length + " 张图 · 点击查看";
         body.appendChild(more);
       }
+      var dateEl = document.createElement("div");
+      dateEl.className = "love-card__date";
+      dateEl.textContent = formatDate(rec.createdAt);
+      body.appendChild(dateEl);
       card.appendChild(imgWrap);
       card.appendChild(body);
       card.addEventListener("click", function () {
