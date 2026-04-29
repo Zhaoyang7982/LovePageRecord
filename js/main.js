@@ -1,7 +1,9 @@
 /**
- * 情侣双向爱意记录 — 最简用法
- * 下面两行填 Supabase 的「项目 URL」和「anon public key」，保存后推送，手机电脑就都能读云端。
- * 留空 = 只用本机浏览器存，换设备看不到。
+ * 情侣双向爱意记录
+ * 配置写在 js/config.defaults.js（占位，可入库）与同目录 config.local.js（勿提交）。
+ * 可复制 config.local.example.js 为 config.local.js 后填写；
+ * 或运行 love-record/scripts/render-config-from-env.py（读取 app.env / 环境变量）。
+ * Supabase：留 URL/key 为空则仅用本机 localStorage。
  * 建表：supabase/schema.sql 在 Supabase SQL Editor 执行一次。
  */
 (function () {
@@ -10,16 +12,29 @@
   var EMPTY_TIP =
     "Ta 还没有为你留下记录，把链接发给 Ta 吧～";
 
+  /** @type {object} */
+  var _raw = typeof window.__LOVE_RECORD_CONFIG__ !== "undefined"
+    ? window.__LOVE_RECORD_CONFIG__
+    : {};
   /** 例 https://xxxx.supabase.co */
-  var SUPABASE_URL = "https://bxxkukqfsttbieehwrsh.supabase.co";
+  var SUPABASE_URL =
+    (_raw && _raw.SUPABASE_URL ? String(_raw.SUPABASE_URL) : "").trim();
   /** 一长串 eyJ... 的 anon key */
-  var SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ4eGt1a3Fmc3R0YmllZWh3cnNoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwOTg4OTksImV4cCI6MjA5MTY3NDg5OX0.CGNqVLrly7P52oHZZYf_psQtTa_J1rlhu9ljPQKHMiU";
+  var SUPABASE_ANON_KEY =
+    (_raw && _raw.SUPABASE_ANON_KEY ? String(_raw.SUPABASE_ANON_KEY) : "").trim();
 
   /** @type {{ female: {username:string,password:string}, male: {username:string,password:string} }} */
-  var ACCOUNTS = {
-    female: { username: "Yuyu", password: "0321" },
-    male: { username: "qiqi", password: "1112" }
-  };
+  var ACCOUNTS =
+    _raw &&
+    _raw.ACCOUNTS &&
+    _raw.ACCOUNTS.female &&
+    _raw.ACCOUNTS.male &&
+    typeof _raw.ACCOUNTS.female.username === "string"
+      ? _raw.ACCOUNTS
+      : {
+          female: { username: "", password: "" },
+          male: { username: "", password: "" }
+        };
 
   var ROLE_LABEL = { female: "女方", male: "男方" };
 
@@ -200,10 +215,10 @@
     } catch (e) {}
     if (devHint) {
       b.textContent =
-        "[维护] 云端未启用：在 js/main.js 顶部给 SUPABASE_URL、SUPABASE_ANON_KEY 赋值后保存并推送。";
+        "[维护] 云端未启用：请配置 js/config.local.js（或环境变量生成），填写 SUPABASE_URL、SUPABASE_ANON_KEY。";
     } else {
       b.textContent =
-        "记录目前只保存在本手机；换设备看不到。两台手机共用一份请在电脑里打开 js/main.js，填好 Supabase 两行后重新上传网站。";
+        "记录目前只保存在本手机；换设备看不到。请将 config.local.example.js 复制为 config.local.js 并填写 Supabase，或在线上由部署流程写入该文件。";
     }
     b.classList.remove("hidden");
   }
