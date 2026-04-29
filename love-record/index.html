@@ -105,7 +105,12 @@
         </label>
         <label class="field">
           <span>照片（可选，可多选）</span>
-          <input type="file" id="publish-files" accept="image/*" multiple capture="environment" />
+          <div class="picker-actions">
+            <button type="button" id="btn-pick-camera" class="btn btn--ghost">手机拍照</button>
+            <button type="button" id="btn-pick-album" class="btn btn--ghost">本地相册</button>
+          </div>
+          <input type="file" id="publish-files-camera" class="hidden" accept="image/*" multiple capture="environment" />
+          <input type="file" id="publish-files-album" class="hidden" accept="image/*" multiple />
         </label>
         <div id="publish-preview" class="preview-grid"></div>
         <button type="submit" class="btn btn--primary btn--block">发布</button>

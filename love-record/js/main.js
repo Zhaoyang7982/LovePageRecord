@@ -424,7 +424,8 @@
 
   function openPublish() {
     $("publish-text").value = "";
-    $("publish-files").value = "";
+    $("publish-files-camera").value = "";
+    $("publish-files-album").value = "";
     $("publish-preview").innerHTML = "";
     $("publish-preview").removeAttribute("data-urls");
     $("publish-overlay").classList.remove("hidden");
@@ -436,11 +437,35 @@
 
   function renderPreview(container, urls) {
     container.innerHTML = "";
-    urls.forEach(function (u) {
+    urls.forEach(function (u, idx) {
+      var item = document.createElement("div");
+      item.className = "preview-item";
       var im = document.createElement("img");
       im.src = u;
       im.alt = "";
-      container.appendChild(im);
+      var del = document.createElement("button");
+      del.type = "button";
+      del.className = "preview-remove";
+      del.setAttribute("aria-label", "删除这张图片");
+      del.textContent = "×";
+      del.setAttribute("data-index", String(idx));
+      item.appendChild(im);
+      item.appendChild(del);
+      container.appendChild(item);
+    });
+  }
+
+  function appendPreviewFiles(fileList) {
+    readFilesAsCompressed(fileList, function (urls) {
+      if (!urls.length) return;
+      var preview = $("publish-preview");
+      var oldUrls = [];
+      try {
+        oldUrls = preview.dataset.urls ? JSON.parse(preview.dataset.urls) : [];
+      } catch (e) {}
+      var next = oldUrls.concat(urls);
+      preview.dataset.urls = JSON.stringify(next);
+      renderPreview(preview, next);
     });
   }
 
@@ -491,11 +516,34 @@
       if (ev.target === $("publish-overlay")) closePublish();
     });
 
-    $("publish-files").addEventListener("change", function () {
-      readFilesAsCompressed($("publish-files").files, function (urls) {
-        $("publish-preview").dataset.urls = JSON.stringify(urls);
-        renderPreview($("publish-preview"), urls);
-      });
+    $("btn-pick-camera").addEventListener("click", function () {
+      $("publish-files-camera").click();
+    });
+    $("btn-pick-album").addEventListener("click", function () {
+      $("publish-files-album").click();
+    });
+    $("publish-files-camera").addEventListener("change", function () {
+      appendPreviewFiles($("publish-files-camera").files);
+      $("publish-files-camera").value = "";
+    });
+    $("publish-files-album").addEventListener("change", function () {
+      appendPreviewFiles($("publish-files-album").files);
+      $("publish-files-album").value = "";
+    });
+    $("publish-preview").addEventListener("click", function (ev) {
+      var t = ev.target;
+      if (!t || !t.classList || !t.classList.contains("preview-remove")) return;
+      var idx = Number(t.getAttribute("data-index"));
+      if (isNaN(idx)) return;
+      var preview = $("publish-preview");
+      var urls = [];
+      try {
+        urls = preview.dataset.urls ? JSON.parse(preview.dataset.urls) : [];
+      } catch (e) {}
+      if (!urls.length || idx < 0 || idx >= urls.length) return;
+      urls.splice(idx, 1);
+      preview.dataset.urls = JSON.stringify(urls);
+      renderPreview(preview, urls);
     });
 
     $("publish-form").addEventListener("submit", function (ev) {
