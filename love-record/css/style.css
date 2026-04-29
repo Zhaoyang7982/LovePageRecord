@@ -357,6 +357,17 @@ input[type="file"] {
   width: 100%;
 }
 
+.btn--sm {
+  padding: 0.42rem 0.88rem;
+  font-size: 0.82rem;
+}
+
+.btn.is-active {
+  background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+  color: #fff;
+  border-color: transparent;
+}
+
 .btn--primary {
   background: linear-gradient(135deg, var(--accent), var(--accent-deep));
   color: #fff;
@@ -412,6 +423,13 @@ input[type="file"] {
   margin-bottom: clamp(1.5rem, 5vmin, 2.5rem);
   padding-top: clamp(0.25rem, 2vmin, 0.75rem);
   text-align: center;
+}
+
+.view-switch {
+  display: flex;
+  justify-content: center;
+  gap: 0.45rem;
+  margin-top: 0.65rem;
 }
 
 .hint {
@@ -763,6 +781,10 @@ input[type="file"] {
   font-size: 0.95rem;
   line-height: 1.65;
   white-space: pre-wrap;
+}
+
+#btn-edit-detail {
+  margin-top: 0.95rem;
 }
 
 /* Toast */

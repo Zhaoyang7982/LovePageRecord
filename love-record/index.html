@@ -80,7 +80,10 @@
     <main class="app-main">
       <div class="toolbar">
         <button type="button" id="btn-open-publish" class="btn btn--primary">为 Ta 记录一条</button>
-        <p class="hint">对方登录后将看到这条记录；自己不会看到已发布内容。</p>
+        <div class="view-switch" role="tablist" aria-label="记录视图切换">
+          <button type="button" id="btn-view-received" class="btn btn--ghost btn--sm is-active">对方为我</button>
+          <button type="button" id="btn-view-sent" class="btn btn--ghost btn--sm">我为对方</button>
+        </div>
         <p id="stats-tip" class="hint stats-tip"></p>
         <p id="sync-banner" class="hint sync-banner hidden" role="status"></p>
       </div>
@@ -126,6 +129,7 @@
       <div id="detail-date" class="detail-date"></div>
       <div id="detail-gallery" class="detail-gallery"></div>
       <p id="detail-text" class="detail-text"></p>
+      <button type="button" id="btn-edit-detail" class="btn btn--primary btn--block hidden">编辑这条记录</button>
     </div>
   </div>
 

@@ -46,6 +46,10 @@
   var selectedRecord = null;
   /** @type {any[]} */
   var entriesCache = [];
+  /** @type {'received'|'sent'} */
+  var currentView = "received";
+  /** @type {string|null} */
+  var editingRecordId = null;
 
   function $(id) {
     return document.getElementById(id);
@@ -112,6 +116,26 @@
     };
     return fetch(url, {
       method: "POST",
+      headers: Object.assign({}, sbHeaders(), { Prefer: "return=minimal" }),
+      body: JSON.stringify(payload)
+    }).then(function (res) {
+      if (!res.ok) {
+        return res.text().then(function (t) {
+          throw new Error(t || "HTTP " + res.status);
+        });
+      }
+    });
+  }
+
+  function updateEntryRemote(rec) {
+    var base = SUPABASE_URL.replace(/\/$/, "");
+    var url = base + "/rest/v1/love_entries?id=eq." + encodeURIComponent(rec.id);
+    var payload = {
+      body: rec.text,
+      images: rec.images
+    };
+    return fetch(url, {
+      method: "PATCH",
       headers: Object.assign({}, sbHeaders(), { Prefer: "return=minimal" }),
       body: JSON.stringify(payload)
     }).then(function (res) {
@@ -336,8 +360,17 @@
 
   function getVisibleEntries(role) {
     return entriesCache.filter(function (e) {
-      return e && e.receiver === role;
+      if (!e) return false;
+      if (currentView === "sent") return e.publisher === role;
+      return e.receiver === role;
     });
+  }
+
+  function setView(view) {
+    currentView = view === "sent" ? "sent" : "received";
+    $("btn-view-received").classList.toggle("is-active", currentView === "received");
+    $("btn-view-sent").classList.toggle("is-active", currentView === "sent");
+    renderCards();
   }
 
   function floatClass(index) {
@@ -359,7 +392,9 @@
     var empty = $("empty-tip");
     var box = $("cards-container");
     box.innerHTML = "";
-    empty.textContent = EMPTY_TIP;
+    empty.textContent = currentView === "sent"
+      ? "你还没有为 Ta 发布记录，点击上方按钮开始记录吧～"
+      : EMPTY_TIP;
     empty.classList.toggle("hidden", entries.length > 0);
     entries.sort(function (a, b) {
       return new Date(b.createdAt) - new Date(a.createdAt);
@@ -422,6 +457,10 @@
       gal.appendChild(im);
     });
     $("detail-text").textContent = rec.text || "";
+    $("btn-edit-detail").classList.toggle(
+      "hidden",
+      !(rec && rec.publisher === currentRole)
+    );
     $("detail-overlay").classList.remove("hidden");
   }
 
@@ -442,11 +481,28 @@
   }
 
   function openPublish() {
+    editingRecordId = null;
+    $("publish-title").textContent = "为 Ta 写一条";
+    $("publish-form").querySelector('button[type="submit"]').textContent = "发布";
     $("publish-text").value = "";
     $("publish-files-camera").value = "";
     $("publish-files-album").value = "";
     $("publish-preview").innerHTML = "";
     $("publish-preview").removeAttribute("data-urls");
+    $("publish-overlay").classList.remove("hidden");
+  }
+
+  function openPublishForEdit(rec) {
+    if (!rec) return;
+    editingRecordId = rec.id;
+    $("publish-title").textContent = "编辑这条记录";
+    $("publish-form").querySelector('button[type="submit"]').textContent = "保存修改";
+    $("publish-text").value = rec.text || "";
+    $("publish-files-camera").value = "";
+    $("publish-files-album").value = "";
+    var urls = Array.isArray(rec.images) ? rec.images.slice() : [];
+    $("publish-preview").dataset.urls = JSON.stringify(urls);
+    renderPreview($("publish-preview"), urls);
     $("publish-overlay").classList.remove("hidden");
   }
 
@@ -530,6 +586,12 @@
     });
 
     $("btn-open-publish").addEventListener("click", openPublish);
+    $("btn-view-received").addEventListener("click", function () {
+      setView("received");
+    });
+    $("btn-view-sent").addEventListener("click", function () {
+      setView("sent");
+    });
     $("btn-close-publish").addEventListener("click", closePublish);
     $("publish-overlay").addEventListener("click", function (ev) {
       if (ev.target === $("publish-overlay")) closePublish();
@@ -579,15 +641,21 @@
         return;
       }
       var rec = {
-        id: genId(),
+        id: editingRecordId || genId(),
         publisher: currentRole,
         receiver: oppositeRole(currentRole),
         text: text,
         images: urls || [],
         createdAt: new Date().toISOString()
       };
+      if (editingRecordId) {
+        var origin = entriesCache.find(function (e) { return e && e.id === editingRecordId; });
+        if (origin) rec.createdAt = origin.createdAt;
+      }
       if (useRemote()) {
-        insertEntryRemote(rec)
+        var isEditing = !!editingRecordId;
+        var action = editingRecordId ? updateEntryRemote(rec) : insertEntryRemote(rec);
+        action
           .then(function () {
             return fetchEntriesFromRemote();
           })
@@ -595,14 +663,22 @@
             entriesCache = rows;
             closePublish();
             renderCards();
-            showToast("已发布，对方任意设备登录即可看到");
+            editingRecordId = null;
+            showToast(isEditing ? "修改已保存" : "已发布，对方任意设备登录即可看到");
           })
           .catch(function (e) {
-            showToast("发布失败：" + (e.message || "未知错误"), true);
+            showToast((isEditing ? "保存失败：" : "发布失败：") + (e.message || "未知错误"), true);
           });
       } else {
+        var isEditingLocal = !!editingRecordId;
         var all = loadEntriesLocal();
-        all.push(rec);
+        if (editingRecordId) {
+          all = all.map(function (e) {
+            return e && e.id === editingRecordId ? rec : e;
+          });
+        } else {
+          all.push(rec);
+        }
         if (!saveEntriesLocal(all)) {
           showToast("存储空间不足，请减少图片数量或删除旧记录", true);
           return;
@@ -610,7 +686,8 @@
         entriesCache = all;
         closePublish();
         renderCards();
-        showToast("已发布，对方登录后即可看到");
+        editingRecordId = null;
+        showToast(isEditingLocal ? "修改已保存" : "已发布，对方登录后即可看到");
       }
     });
 
@@ -622,6 +699,11 @@
       var t = ev.target;
       if (!t || t.tagName !== "IMG") return;
       openImageZoom(t.src || "");
+    });
+    $("btn-edit-detail").addEventListener("click", function () {
+      if (!selectedRecord || selectedRecord.publisher !== currentRole) return;
+      closeDetail();
+      openPublishForEdit(selectedRecord);
     });
     $("btn-close-image").addEventListener("click", closeImageZoom);
     $("image-overlay").addEventListener("click", function (ev) {
