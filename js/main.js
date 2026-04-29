@@ -9,6 +9,7 @@
 (function () {
   var STORAGE_SESSION = "loveRecord_session";
   var STORAGE_ENTRIES = "loveRecord_entries";
+  var STORAGE_TRAVELS = "loveRecord_travels";
   var EMPTY_TIP =
     "Ta 还没有为你留下记录，把链接发给 Ta 吧～";
 
@@ -46,6 +47,12 @@
   var selectedRecord = null;
   /** @type {any[]} */
   var entriesCache = [];
+  /** @type {any[]} */
+  var travelsCache = [];
+  /** @type {any|null} */
+  var travelMap = null;
+  /** @type {any[]} */
+  var travelMarkers = [];
   /** @type {'received'|'sent'} */
   var currentView = "received";
   /** @type {string|null} */
@@ -178,9 +185,29 @@
     }
   }
 
+  function loadTravelsLocal() {
+    try {
+      var raw = localStorage.getItem(STORAGE_TRAVELS);
+      if (!raw) return [];
+      var arr = JSON.parse(raw);
+      return Array.isArray(arr) ? arr : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
   function saveEntriesLocal(entries) {
     try {
       localStorage.setItem(STORAGE_ENTRIES, JSON.stringify(entries));
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function saveTravelsLocal(rows) {
+    try {
+      localStorage.setItem(STORAGE_TRAVELS, JSON.stringify(rows));
       return true;
     } catch (e) {
       return false;
@@ -216,6 +243,52 @@
         if (typeof done === "function") done(null);
       })
       .catch(function (e) {
+        if (typeof done === "function") done(e);
+      });
+  }
+
+  function fetchTravelsFromRemote() {
+    var base = SUPABASE_URL.replace(/\/$/, "");
+    var url = base + "/rest/v1/love_travel_cities?select=*&order=created_at.desc";
+    return fetch(url, { headers: sbHeaders() }).then(function (res) {
+      if (!res.ok) {
+        return res.text().then(function (t) {
+          throw new Error(t || "HTTP " + res.status);
+        });
+      }
+      return res.json();
+    });
+  }
+
+  function insertTravelRemote(row) {
+    var base = SUPABASE_URL.replace(/\/$/, "");
+    var url = base + "/rest/v1/love_travel_cities";
+    return fetch(url, {
+      method: "POST",
+      headers: Object.assign({}, sbHeaders(), { Prefer: "return=minimal" }),
+      body: JSON.stringify(row)
+    }).then(function (res) {
+      if (!res.ok) {
+        return res.text().then(function (t) {
+          throw new Error(t || "HTTP " + res.status);
+        });
+      }
+    });
+  }
+
+  function refreshTravels(done) {
+    if (!useRemote()) {
+      travelsCache = loadTravelsLocal();
+      if (typeof done === "function") done(null);
+      return;
+    }
+    fetchTravelsFromRemote()
+      .then(function (rows) {
+        travelsCache = rows;
+        if (typeof done === "function") done(null);
+      })
+      .catch(function (e) {
+        travelsCache = loadTravelsLocal();
         if (typeof done === "function") done(e);
       });
   }
@@ -356,6 +429,91 @@
     var m = d.getMonth() + 1;
     var day = d.getDate();
     return y + "年" + m + "月" + day + "日";
+  }
+
+  function daysUntil(month, day) {
+    var now = new Date();
+    var y = now.getFullYear();
+    var target = new Date(y, month - 1, day, 0, 0, 0, 0);
+    var today = new Date(y, now.getMonth(), now.getDate(), 0, 0, 0, 0);
+    if (target < today) {
+      target = new Date(y + 1, month - 1, day, 0, 0, 0, 0);
+    }
+    return Math.round((target.getTime() - today.getTime()) / 86400000);
+  }
+
+  function updateCountdownTip() {
+    var el = $("countdown-tip");
+    if (!el) return;
+    var dMale = daysUntil(3, 21);
+    var dFemale = daysUntil(11, 12);
+    var dLove = daysUntil(6, 9);
+    el.innerHTML =
+      '<p>倒计时：恋爱纪念日（6月9日）还有 <strong>' + dLove + '</strong> 天</p>' +
+      '<p>倒计时：男方生日（3月21日）还有 <strong>' + dMale + '</strong> 天</p>' +
+      '<p>倒计时：女方生日（11月12日）还有 <strong>' + dFemale + '</strong> 天</p>';
+  }
+
+  function geocodeCity(city, done) {
+    var url =
+      "https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=" +
+      encodeURIComponent(city);
+    fetch(url, { headers: { Accept: "application/json" } })
+      .then(function (res) { return res.json(); })
+      .then(function (rows) {
+        if (!rows || !rows.length) return done(new Error("未找到该城市"));
+        done(null, {
+          lat: Number(rows[0].lat),
+          lng: Number(rows[0].lon)
+        });
+      })
+      .catch(function (e) {
+        done(e || new Error("定位失败"));
+      });
+  }
+
+  function ensureTravelMap() {
+    if (travelMap || typeof window.L === "undefined") return;
+    travelMap = window.L.map("travel-map").setView([35.8617, 104.1954], 4);
+    window.L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 18,
+      attribution: "&copy; OpenStreetMap"
+    }).addTo(travelMap);
+  }
+
+  function clearTravelMarkers() {
+    if (!travelMap) return;
+    travelMarkers.forEach(function (m) { travelMap.removeLayer(m); });
+    travelMarkers = [];
+  }
+
+  function renderTravelMapAndList() {
+    ensureTravelMap();
+    var list = $("travel-list");
+    if (!list) return;
+    list.innerHTML = "";
+    clearTravelMarkers();
+    var points = [];
+    travelsCache.forEach(function (t) {
+      if (!t || typeof t.lat !== "number" || typeof t.lng !== "number") return;
+      var when = t.travel_date ? (" · " + t.travel_date) : "";
+      var who = t.publisher === "female" ? "女方" : "男方";
+      var text = t.city_name + when + " · " + who + " 标记";
+      var item = document.createElement("span");
+      item.className = "travel-item";
+      item.textContent = text;
+      list.appendChild(item);
+      if (travelMap) {
+        var marker = window.L.marker([t.lat, t.lng]).addTo(travelMap);
+        marker.bindPopup(text);
+        travelMarkers.push(marker);
+      }
+      points.push([t.lat, t.lng]);
+    });
+    if (travelMap) {
+      if (points.length === 1) travelMap.setView(points[0], 8);
+      if (points.length > 1) travelMap.fitBounds(points, { padding: [20, 20] });
+    }
   }
 
   function getVisibleEntries(role) {
@@ -547,7 +705,11 @@
   function enterApp(showWelcome) {
     $("role-badge").textContent = "当前身份：" + ROLE_LABEL[currentRole];
     setScreens(true);
+    updateCountdownTip();
     updateSyncBanner();
+    setTimeout(function () {
+      if (travelMap) travelMap.invalidateSize();
+    }, 0);
     setSyncLoading(true);
     refreshEntries(function (err) {
       setSyncLoading(false);
@@ -555,6 +717,9 @@
         showToast("云端同步失败：" + (err.message || "请检查网络与 Supabase 配置"), true);
       }
       renderCards();
+      refreshTravels(function () {
+        renderTravelMapAndList();
+      });
       updateSyncBanner();
     });
     if (showWelcome) showToast("欢迎回来～");
@@ -691,6 +856,55 @@
       }
     });
 
+    $("travel-form").addEventListener("submit", function (ev) {
+      ev.preventDefault();
+      if (!currentRole) return;
+      var city = ($("travel-city").value || "").trim();
+      var travelDate = ($("travel-date").value || "").trim();
+      if (!city) return;
+      geocodeCity(city, function (geoErr, pos) {
+        if (geoErr || !pos) {
+          showToast("城市定位失败，请换个写法试试", true);
+          return;
+        }
+        var row = {
+          id: genId(),
+          city_name: city,
+          travel_date: travelDate || null,
+          lat: pos.lat,
+          lng: pos.lng,
+          publisher: currentRole,
+          created_at: new Date().toISOString()
+        };
+        if (useRemote()) {
+          insertTravelRemote(row)
+            .then(function () { return fetchTravelsFromRemote(); })
+            .then(function (rows) {
+              travelsCache = rows;
+              renderTravelMapAndList();
+              $("travel-form").reset();
+              showToast("已添加旅行城市");
+            })
+            .catch(function () {
+              travelsCache.unshift(row);
+              saveTravelsLocal(travelsCache);
+              renderTravelMapAndList();
+              $("travel-form").reset();
+              showToast("云端写入失败，已暂存本机", true);
+            });
+        } else {
+          travelsCache.unshift(row);
+          if (!saveTravelsLocal(travelsCache)) {
+            showToast("保存失败：本机存储空间不足", true);
+            return;
+          }
+          renderTravelMapAndList();
+          $("travel-form").reset();
+          showToast("已添加旅行城市");
+        }
+      });
+    });
+
     $("btn-close-detail").addEventListener("click", closeDetail);
     $("detail-overlay").addEventListener("click", function (ev) {
       if (ev.target === $("detail-overlay")) closeDetail();
@@ -716,6 +930,8 @@
       enterApp(false);
     } else {
       setScreens(false);
+      ensureTravelMap();
+      renderTravelMapAndList();
     }
   }
 

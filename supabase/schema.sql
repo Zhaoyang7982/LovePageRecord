@@ -17,3 +17,21 @@ create policy "love_select" on public.love_entries for select using (true);
 
 drop policy if exists "love_insert" on public.love_entries;
 create policy "love_insert" on public.love_entries for insert with check (true);
+
+create table if not exists public.love_travel_cities (
+  id text primary key,
+  city_name text not null,
+  travel_date date,
+  lat double precision not null,
+  lng double precision not null,
+  publisher text not null,
+  created_at timestamptz not null default now()
+);
+
+alter table public.love_travel_cities enable row level security;
+
+drop policy if exists "travel_select" on public.love_travel_cities;
+create policy "travel_select" on public.love_travel_cities for select using (true);
+
+drop policy if exists "travel_insert" on public.love_travel_cities;
+create policy "travel_insert" on public.love_travel_cities for insert with check (true);

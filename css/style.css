@@ -419,6 +419,45 @@ input[type="file"] {
   padding-bottom: clamp(1.5rem, 5vmin, 3rem);
 }
 
+.travel-section {
+  margin-top: 1rem;
+  padding: 1rem;
+}
+
+.travel-title {
+  margin: 0 0 0.8rem;
+  font-size: 1rem;
+}
+
+.travel-form {
+  display: grid;
+  grid-template-columns: 1fr 160px auto;
+  gap: 0.5rem;
+}
+
+.travel-map {
+  margin-top: 0.7rem;
+  height: 260px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--glass-border);
+}
+
+.travel-list {
+  margin-top: 0.7rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.travel-item {
+  font-size: 0.78rem;
+  padding: 0.28rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(168, 200, 232, 0.35);
+}
+
 .toolbar {
   margin-bottom: clamp(1.5rem, 5vmin, 2.5rem);
   padding-top: clamp(0.25rem, 2vmin, 0.75rem);
@@ -452,6 +491,23 @@ input[type="file"] {
   color: var(--accent-deep);
   font-size: 0.82rem;
   font-weight: 600;
+}
+
+.countdown-tip {
+  margin-top: 0.4rem;
+  padding: 0.5rem 0.8rem;
+  max-width: 560px;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(232, 160, 191, 0.28);
+  border-radius: 12px;
+}
+
+.countdown-tip p {
+  margin: 0.15rem 0;
+}
+
+.countdown-tip strong {
+  color: var(--accent-deep);
 }
 
 /* 卡片容器 */
