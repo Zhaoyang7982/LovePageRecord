@@ -1,6 +1,9 @@
 name: Deploy GitHub Pages
 
-# love-record → gh-pages；Pages 设置：Deploy from branch → gh-pages → / (root)
+# love-record → gh-pages；Pages：Deploy from branch → gh-pages → /（root）
+#
+# 流程简述：推送 main → 本工作流运行 → Python 写入 love-record/js/config.local.js →
+# publish_dir 上传到 gh-pages。完成后在 Repo Settings → Pages 里打开站点验证。
 
 on:
   push:
@@ -20,6 +23,16 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Generate js/config.local.js from secrets
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          FEMALE_USERNAME: ${{ secrets.LOVE_FEMALE_USERNAME }}
+          FEMALE_PASSWORD: ${{ secrets.LOVE_FEMALE_PASSWORD }}
+          MALE_USERNAME: ${{ secrets.LOVE_MALE_USERNAME }}
+          MALE_PASSWORD: ${{ secrets.LOVE_MALE_PASSWORD }}
+        run: python3 love-record/scripts/render-config-from-env.py
 
       - name: Push love-record to gh-pages branch
         uses: peaceiris/actions-gh-pages@v4

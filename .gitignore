@@ -4,3 +4,4 @@
 # 本地密钥与生成物勿提交
 love-record/app.env
 love-record/js/config.js
+love-record/js/config.local.js
