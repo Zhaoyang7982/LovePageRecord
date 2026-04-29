@@ -81,6 +81,7 @@
       <div class="toolbar">
         <button type="button" id="btn-open-publish" class="btn btn--primary">为 Ta 记录一条</button>
         <p class="hint">对方登录后将看到这条记录；自己不会看到已发布内容。</p>
+        <p id="stats-tip" class="hint stats-tip"></p>
         <p id="sync-banner" class="hint sync-banner hidden" role="status"></p>
       </div>
 
@@ -126,6 +127,12 @@
       <div id="detail-gallery" class="detail-gallery"></div>
       <p id="detail-text" class="detail-text"></p>
     </div>
+  </div>
+
+  <!-- 图片放大 -->
+  <div id="image-overlay" class="overlay overlay--image hidden" role="dialog" aria-modal="true">
+    <button type="button" id="btn-close-image" class="icon-btn icon-btn--float icon-btn--image" aria-label="关闭">×</button>
+    <img id="image-zoom" class="image-zoom" alt="放大图片" />
   </div>
 
   <div id="toast" class="toast hidden" role="status"></div>
