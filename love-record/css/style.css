@@ -430,6 +430,12 @@ input[type="file"] {
   font-size: 0.74rem;
 }
 
+.stats-tip {
+  color: var(--accent-deep);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
 /* 卡片容器 */
 .cards-wrap {
   position: relative;
@@ -730,6 +736,26 @@ input[type="file"] {
   object-fit: cover;
   border-radius: 10px;
   cursor: zoom-in;
+}
+
+.overlay--image {
+  z-index: 160;
+  background: rgba(24, 18, 24, 0.82);
+}
+
+.icon-btn--image {
+  top: 1rem;
+  right: 1rem;
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.image-zoom {
+  max-width: min(94vw, 900px);
+  max-height: 86vh;
+  width: auto;
+  height: auto;
+  border-radius: 12px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.35);
 }
 
 .detail-text {

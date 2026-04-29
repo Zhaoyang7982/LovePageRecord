@@ -348,6 +348,14 @@
   function renderCards() {
     if (!currentRole) return;
     var entries = getVisibleEntries(currentRole);
+    var stats = $("stats-tip");
+    if (stats) {
+      var sentCount = entriesCache.filter(function (e) {
+        return e && e.publisher === currentRole;
+      }).length;
+      stats.textContent =
+        "对方为我做了 " + entries.length + " 条记录 · 我为对方做了 " + sentCount + " 条记录";
+    }
     var empty = $("empty-tip");
     var box = $("cards-container");
     box.innerHTML = "";
@@ -420,6 +428,17 @@
   function closeDetail() {
     $("detail-overlay").classList.add("hidden");
     selectedRecord = null;
+  }
+
+  function openImageZoom(src) {
+    if (!src) return;
+    $("image-zoom").src = src;
+    $("image-overlay").classList.remove("hidden");
+  }
+
+  function closeImageZoom() {
+    $("image-overlay").classList.add("hidden");
+    $("image-zoom").removeAttribute("src");
   }
 
   function openPublish() {
@@ -598,6 +617,15 @@
     $("btn-close-detail").addEventListener("click", closeDetail);
     $("detail-overlay").addEventListener("click", function (ev) {
       if (ev.target === $("detail-overlay")) closeDetail();
+    });
+    $("detail-gallery").addEventListener("click", function (ev) {
+      var t = ev.target;
+      if (!t || t.tagName !== "IMG") return;
+      openImageZoom(t.src || "");
+    });
+    $("btn-close-image").addEventListener("click", closeImageZoom);
+    $("image-overlay").addEventListener("click", function (ev) {
+      if (ev.target === $("image-overlay")) closeImageZoom();
     });
 
     var saved = loadSession();
