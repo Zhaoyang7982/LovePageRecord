@@ -24,6 +24,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta name="description" content="情侣双向爱意记录 — 专属私密空间" />
   <title>爱意记录 · Love Record</title>
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  />
   <link rel="stylesheet" href="css/style.css?v=8" />
 </head>
 <body>
@@ -85,6 +91,7 @@
           <button type="button" id="btn-view-sent" class="btn btn--ghost btn--sm">我为对方</button>
         </div>
         <p id="stats-tip" class="hint stats-tip"></p>
+        <div id="countdown-tip" class="hint countdown-tip"></div>
         <p id="sync-banner" class="hint sync-banner hidden" role="status"></p>
       </div>
 
@@ -92,6 +99,18 @@
         <p id="empty-tip" class="empty-tip hidden">Ta 还没有为你留下记录，把链接发给 Ta 吧～</p>
         <div id="cards-container" class="cards-container"></div>
       </div>
+
+      <section class="travel-section glass" aria-label="旅行足迹">
+        <h2 class="travel-title">我们旅游去过的地方</h2>
+        <form id="travel-form" class="travel-form">
+          <input id="travel-city" type="text" placeholder="城市名（如：上海）" required />
+          <input id="travel-date" type="date" />
+          <button type="submit" class="btn btn--primary btn--sm">添加标记</button>
+        </form>
+        <p class="hint">双方都可以添加城市；日期可不填。</p>
+        <div id="travel-map" class="travel-map"></div>
+        <div id="travel-list" class="travel-list"></div>
+      </section>
     </main>
   </section>
 
@@ -143,6 +162,12 @@
 
   <script defer src="js/config.defaults.js?v=1"></script>
   <script defer src="js/config.local.js"></script>
+  <script
+    defer
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+  ></script>
   <script defer src="js/main.js?v=10"></script>
 </body>
 </html>
