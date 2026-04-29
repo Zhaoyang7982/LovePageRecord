@@ -37,7 +37,7 @@
           male: { username: "", password: "" }
         };
 
-  var ROLE_LABEL = { female: "女方", male: "男方" };
+  var ROLE_LABEL = { female: "玉玉", male: "奇奇" };
 
   /** @typedef {'female'|'male'} Role */
 
@@ -145,6 +145,21 @@
       method: "PATCH",
       headers: Object.assign({}, sbHeaders(), { Prefer: "return=minimal" }),
       body: JSON.stringify(payload)
+    }).then(function (res) {
+      if (!res.ok) {
+        return res.text().then(function (t) {
+          throw new Error(t || "HTTP " + res.status);
+        });
+      }
+    });
+  }
+
+  function deleteEntryRemote(id) {
+    var base = SUPABASE_URL.replace(/\/$/, "");
+    var url = base + "/rest/v1/love_entries?id=eq." + encodeURIComponent(id);
+    return fetch(url, {
+      method: "DELETE",
+      headers: Object.assign({}, sbHeaders(), { Prefer: "return=minimal" })
     }).then(function (res) {
       if (!res.ok) {
         return res.text().then(function (t) {
@@ -407,6 +422,22 @@
   function setScreens(loggedIn) {
     $("login-screen").classList.toggle("hidden", loggedIn);
     $("app-screen").classList.toggle("hidden", !loggedIn);
+    $("travel-screen").classList.add("hidden");
+  }
+
+  function openTravelScreen() {
+    $("app-screen").classList.add("hidden");
+    $("travel-screen").classList.remove("hidden");
+    ensureTravelMap();
+    renderTravelMapAndList();
+    setTimeout(function () {
+      if (travelMap) travelMap.invalidateSize();
+    }, 0);
+  }
+
+  function openAppScreen() {
+    $("travel-screen").classList.add("hidden");
+    $("app-screen").classList.remove("hidden");
   }
 
   function tryLogin(username, password) {
@@ -449,9 +480,9 @@
     var dFemale = daysUntil(11, 12);
     var dLove = daysUntil(6, 9);
     el.innerHTML =
-      '<p>倒计时：恋爱纪念日（6月9日）还有 <strong>' + dLove + '</strong> 天</p>' +
-      '<p>倒计时：男方生日（3月21日）还有 <strong>' + dMale + '</strong> 天</p>' +
-      '<p>倒计时：女方生日（11月12日）还有 <strong>' + dFemale + '</strong> 天</p>';
+      '<p>距离玉玉的生日11.12还有 <strong>' + dFemale + "</strong> 天</p>" +
+      '<p>距离奇奇的生日3.21还有 <strong>' + dMale + "</strong> 天</p>" +
+      '<p>距离恋爱纪念日还有 <strong>' + dLove + "</strong> 天</p>";
   }
 
   function geocodeCity(city, done) {
@@ -490,14 +521,18 @@
   function renderTravelMapAndList() {
     ensureTravelMap();
     var list = $("travel-list");
+    var stats = $("travel-stats");
     if (!list) return;
     list.innerHTML = "";
     clearTravelMarkers();
+    var citySet = {};
     var points = [];
     travelsCache.forEach(function (t) {
       if (!t || typeof t.lat !== "number" || typeof t.lng !== "number") return;
+      var cityKey = String(t.city_name || "").trim().toLowerCase();
+      if (cityKey) citySet[cityKey] = true;
       var when = t.travel_date ? (" · " + t.travel_date) : "";
-      var who = t.publisher === "female" ? "女方" : "男方";
+      var who = t.publisher === "female" ? "玉玉" : "奇奇";
       var text = t.city_name + when + " · " + who + " 标记";
       var item = document.createElement("span");
       item.className = "travel-item";
@@ -513,6 +548,13 @@
     if (travelMap) {
       if (points.length === 1) travelMap.setView(points[0], 8);
       if (points.length > 1) travelMap.fitBounds(points, { padding: [20, 20] });
+    }
+    if (stats) {
+      var cityCount = Object.keys(citySet).length;
+      stats.textContent =
+        cityCount > 0
+          ? "我们一起把心动留在了 " + cityCount + " 座城市，每一站都是只属于奇奇和玉玉的回忆。"
+          : "等你们点亮第一座城市，这张地图就会开始讲述奇奇和玉玉的故事。";
     }
   }
 
@@ -541,11 +583,14 @@
     var entries = getVisibleEntries(currentRole);
     var stats = $("stats-tip");
     if (stats) {
+      var receivedCount = entriesCache.filter(function (e) {
+        return e && e.receiver === currentRole;
+      }).length;
       var sentCount = entriesCache.filter(function (e) {
         return e && e.publisher === currentRole;
       }).length;
       stats.textContent =
-        "对方为我做了 " + entries.length + " 条记录 · 我为对方做了 " + sentCount + " 条记录";
+        "对方为我做了 " + receivedCount + " 条记录 · 我为对方做了 " + sentCount + " 条记录";
     }
     var empty = $("empty-tip");
     var box = $("cards-container");
@@ -642,6 +687,7 @@
     editingRecordId = null;
     $("publish-title").textContent = "为 Ta 写一条";
     $("publish-form").querySelector('button[type="submit"]').textContent = "发布";
+    $("btn-delete-record").classList.add("hidden");
     $("publish-text").value = "";
     $("publish-files-camera").value = "";
     $("publish-files-album").value = "";
@@ -655,6 +701,7 @@
     editingRecordId = rec.id;
     $("publish-title").textContent = "编辑这条记录";
     $("publish-form").querySelector('button[type="submit"]').textContent = "保存修改";
+    $("btn-delete-record").classList.remove("hidden");
     $("publish-text").value = rec.text || "";
     $("publish-files-camera").value = "";
     $("publish-files-album").value = "";
@@ -751,6 +798,8 @@
     });
 
     $("btn-open-publish").addEventListener("click", openPublish);
+    $("btn-open-travel").addEventListener("click", openTravelScreen);
+    $("btn-back-app").addEventListener("click", openAppScreen);
     $("btn-view-received").addEventListener("click", function () {
       setView("received");
     });
@@ -856,6 +905,41 @@
       }
     });
 
+    $("btn-delete-record").addEventListener("click", function () {
+      if (!editingRecordId) return;
+      if (!window.confirm("确认删除这条记录吗？删除后无法恢复。")) return;
+      var targetId = editingRecordId;
+      if (useRemote()) {
+        deleteEntryRemote(targetId)
+          .then(function () {
+            return fetchEntriesFromRemote();
+          })
+          .then(function (rows) {
+            entriesCache = rows;
+            editingRecordId = null;
+            closePublish();
+            renderCards();
+            showToast("记录已删除");
+          })
+          .catch(function (e) {
+            showToast("删除失败：" + (e.message || "未知错误"), true);
+          });
+      } else {
+        var all = loadEntriesLocal().filter(function (e) {
+          return e && e.id !== targetId;
+        });
+        if (!saveEntriesLocal(all)) {
+          showToast("删除失败：本机存储异常", true);
+          return;
+        }
+        entriesCache = all;
+        editingRecordId = null;
+        closePublish();
+        renderCards();
+        showToast("记录已删除");
+      }
+    });
+
     $("travel-form").addEventListener("submit", function (ev) {
       ev.preventDefault();
       if (!currentRole) return;
@@ -916,8 +1000,9 @@
     });
     $("btn-edit-detail").addEventListener("click", function () {
       if (!selectedRecord || selectedRecord.publisher !== currentRole) return;
+      var rec = selectedRecord;
       closeDetail();
-      openPublishForEdit(selectedRecord);
+      openPublishForEdit(rec);
     });
     $("btn-close-image").addEventListener("click", closeImageZoom);
     $("image-overlay").addEventListener("click", function (ev) {
